@@ -17,7 +17,7 @@ const CONFIG_PATHS = {
 
 // Model URL - Remote GGUF from Hugging Face
 const MODEL_URL =
-  "https://huggingface.co/mradermacher/EXAONE-4.0-1.2B-Instruct-GGUF/resolve/main/EXAONE-4.0-1.2B-Instruct.Q4_K_M.gguf";
+  "https://huggingface.co/LGAI-EXAONE/EXAONE-4.0-1.2B-GGUF/resolve/main/EXAONE-4.0-1.2B-Q4_K_M.gguf";
 
 let wllama: Wllama | null = null;
 
