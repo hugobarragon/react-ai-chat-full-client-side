@@ -130,6 +130,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
   ];
 
   // --- NEW: Track thinking state for streaming ---
+  /*
   const [thinkingOpenMap, setThinkingOpenMap] = useState(
     {} as Record<string, boolean>
   );
@@ -145,8 +146,10 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
     setThinkingOpenMap(newMap);
     // eslint-disable-next-line
   }, [messages]);
+  */
 
   // --- Track thinking state for streaming ---
+  /*
   const [thinkingDraft, setThinkingDraft] = useState(
     {} as Record<string, string>
   );
@@ -172,6 +175,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
     });
     setThinkingDraft(newDraft);
   }, [messages]);
+  */
 
   return (
     <div
@@ -238,7 +242,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
           let showCollapse = false;
           let thinkingContent = "";
           let showResponse = false;
-          let collapseActiveKey = [];
+          // let collapseActiveKey = [];
           if (isAI) {
             const content = msg.message.content;
             const closingThinkTag = "</think>";
