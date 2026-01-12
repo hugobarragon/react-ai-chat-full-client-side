@@ -255,7 +255,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
               showCollapse = true;
               thinkingContent = content;
               showResponse = false;
-              collapseActiveKey = ["thinking"];
+              // collapseActiveKey = ["thinking"];
             } else if (closingThinkIndex !== -1 && msg.status === "success") {
               // When </think> appears and finished, show collapse closed, show response
               showCollapse = true;
@@ -264,7 +264,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
                 closingThinkIndex + closingThinkTag.length
               );
               showResponse = true;
-              collapseActiveKey = [];
+              // collapseActiveKey = [];
             }
           }
 
