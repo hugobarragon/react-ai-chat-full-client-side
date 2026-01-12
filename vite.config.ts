@@ -4,6 +4,7 @@ import { visualizer } from "rollup-plugin-visualizer";
 
 // https://vite.dev/config/
 export default defineConfig({
+  base: "/react-ai-chat-full-client-side/",
   plugins: [
     react(),
     visualizer({
