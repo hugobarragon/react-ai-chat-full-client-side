@@ -2,6 +2,17 @@
 
 This project runs a chatbot with LLM, entirely on the client-side with no server-side costs.
 
+## Model Hosting & GitHub Limits
+
+Currently, this project is configured to fetch the GGUF model file (EXAONE 4.0 1.2B) from a remote URL (Hugging Face) during runtime.
+
+You can host the model file locally within the frontend `public` folder for a completely offline experience. However, GitHub has a strict file size limit of 100MB per file. Since even lightweight LLM models (like the 1.2B parameter ones) are typically around 750MB+, we cannot store the model directly in this GitHub repository.
+
+To run locally without internet:
+1. Download the `EXAONE-4.0-1.2B-Q4_K_M.gguf` file.
+2. Place it in the `public/models/` directory.
+3. Update `src/services/wllama.ts` to point to `window.location.origin + "/models/EXAONE-4.0-1.2B-Q4_K_M.gguf"` instead of the remote URL.
+
 ## React + TypeScript + Vite
 
 Currently, two official plugins are available:
