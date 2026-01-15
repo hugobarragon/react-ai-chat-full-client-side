@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { initWebLLM, chatWebLLM, interruptWebLLM } from "../services/webllm";
 
-export const useWebLLM = (initialMessages: any[] = []) => {
+export const useWebLLM = (initialMessages: any[] = [], enableRestrictions = false) => {
   const [messages, setMessages] = useState<any[]>(initialMessages);
   const [loadingModel, setLoadingModel] = useState(true);
   const [loadingProgress, setLoadingProgress] = useState("");
@@ -38,13 +38,13 @@ export const useWebLLM = (initialMessages: any[] = []) => {
         return prev.map((m, idx) =>
           idx === prev.length - 1
             ? {
-                ...m,
-                status: "success",
-                message: {
-                  ...m.message,
-                  content: m.message.content + " [Stopped]",
-                },
-              }
+              ...m,
+              status: "success",
+              message: {
+                ...m.message,
+                content: m.message.content + " [Stopped]",
+              },
+            }
             : m
         );
       }
@@ -89,14 +89,14 @@ export const useWebLLM = (initialMessages: any[] = []) => {
               return prev.map((m) =>
                 m.id === aiMsgId
                   ? {
-                      ...m,
-                      message: {
-                        ...m.message,
-                        content: m.message.content + textToAdd,
-                      },
-                      status: "typing",
-                      toolStatus: undefined,
-                    }
+                    ...m,
+                    message: {
+                      ...m.message,
+                      content: m.message.content + textToAdd,
+                    },
+                    status: "typing",
+                    toolStatus: undefined,
+                  }
                   : m
               );
             });
@@ -107,13 +107,15 @@ export const useWebLLM = (initialMessages: any[] = []) => {
             prev.map((m) =>
               m.id === aiMsgId
                 ? {
-                    ...m,
-                    toolStatus: status,
-                  }
+                  ...m,
+                  toolStatus: status,
+                }
                 : m
             )
           );
-        }
+        },
+        false,
+        enableRestrictions
       );
 
       // Flush remaining tokens
@@ -123,13 +125,13 @@ export const useWebLLM = (initialMessages: any[] = []) => {
           return prev.map((m) =>
             m.id === aiMsgId
               ? {
-                  ...m,
-                  message: {
-                    ...m.message,
-                    content: m.message.content + textToAdd,
-                  },
-                  status: "success",
-                }
+                ...m,
+                message: {
+                  ...m.message,
+                  content: m.message.content + textToAdd,
+                },
+                status: "success",
+              }
               : m
           );
         });
@@ -161,17 +163,21 @@ export const useWebLLM = (initialMessages: any[] = []) => {
         prev.map((m) =>
           m.id === aiMsgId
             ? {
-                ...m,
-                message: {
-                  ...m.message,
-                  content: "Error during generation.",
-                },
-                status: "error",
-              }
+              ...m,
+              message: {
+                ...m.message,
+                content: "Error during generation.",
+              },
+              status: "error",
+            }
             : m
         )
       );
     }
+  };
+
+  const clearMessages = () => {
+    setMessages([]);
   };
 
   return {
@@ -180,5 +186,6 @@ export const useWebLLM = (initialMessages: any[] = []) => {
     loadingProgress,
     handleRequest,
     handleStop,
+    clearMessages,
   };
 };

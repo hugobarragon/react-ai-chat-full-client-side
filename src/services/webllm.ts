@@ -33,7 +33,8 @@ export const chatWebLLM = async (
   messageOrPrompt: string,
   onToken: (token: string) => void,
   onStatus?: (status: string) => void,
-  isRawPrompt = false
+  isRawPrompt = false,
+  enableRestrictions = false
 ) => {
   if (!engine) {
     throw new Error("Engine not initialized");
@@ -41,7 +42,10 @@ export const chatWebLLM = async (
 
   onStatus?.("Thinking...");
 
-  const systemPrompt = `You are Gemma, a helpful AI assistant.
+  let systemPrompt = `You are Qwen, a helpful AI assistant.`;
+
+  if (enableRestrictions) {
+    systemPrompt = `You are Qwen, a helpful AI assistant.
 
 # Tools
 
@@ -68,13 +72,17 @@ For each function call, return a json object with function name and arguments wi
 
 /think
 `;
+  } else {
+    // General purpose mode without tools
+    systemPrompt += `\n\nYou are a general purpose assistant. Answer the user's questions to the best of your ability.`;
+  }
 
   const messages = isRawPrompt
     ? [{ role: "user", content: messageOrPrompt }]
     : [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: messageOrPrompt },
-      ];
+      { role: "system", content: systemPrompt },
+      { role: "user", content: messageOrPrompt },
+    ];
 
   try {
     const chunks = await engine.chat.completions.create({
@@ -137,5 +145,11 @@ For each function call, return a json object with function name and arguments wi
 export const interruptWebLLM = async () => {
   if (engine) {
     await engine.interruptGenerate();
+  }
+};
+
+export const resetWebLLM = async () => {
+  if (engine) {
+    await engine.resetChat();
   }
 };

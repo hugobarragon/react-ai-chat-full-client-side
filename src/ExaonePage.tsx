@@ -9,8 +9,12 @@ const ExaonePage: React.FC = () => {
     { key: "0", label: "Exaone Model", group: "Today" },
   ]);
 
-  const { messages, handleRequest, handleStop, loadingModel, loadingProgress } =
+  const { messages, handleRequest, handleStop, loadingModel, loadingProgress, clearMessages } =
     useWllama([]);
+
+  const handleNewChat = () => {
+    clearMessages();
+  };
 
   return (
     <div style={{ display: "flex", height: "100%", width: "100%" }}>
@@ -18,7 +22,7 @@ const ExaonePage: React.FC = () => {
         items={conversationItems}
         activeKey={activeKey}
         onActiveChange={setActiveKey}
-        onNewChat={() => {}}
+        onNewChat={handleNewChat}
       />
       <ChatArea
         messages={messages}
@@ -26,6 +30,8 @@ const ExaonePage: React.FC = () => {
         onCancel={handleStop}
         loadingModel={loadingModel}
         loadingProgress={loadingProgress}
+        welcomeTitle="Hello, I'm EXAONE 4.0"
+        welcomeDescription="I run on your CPU via Wllama! (Optimized for Logic)"
       />
     </div>
   );

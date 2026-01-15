@@ -66,14 +66,14 @@ export const useWllama = (initialMessages: any[] = []) => {
               return prev.map((m) =>
                 m.id === aiMsgId
                   ? {
-                      ...m,
-                      message: {
-                        ...m.message,
-                        content: m.message.content + textToAdd,
-                      },
-                      status: "typing",
-                      toolStatus: undefined, // Clear tool status when typing resumes
-                    }
+                    ...m,
+                    message: {
+                      ...m.message,
+                      content: m.message.content + textToAdd,
+                    },
+                    status: "typing",
+                    toolStatus: undefined, // Clear tool status when typing resumes
+                  }
                   : m
               );
             });
@@ -85,9 +85,9 @@ export const useWllama = (initialMessages: any[] = []) => {
             prev.map((m) =>
               m.id === aiMsgId
                 ? {
-                    ...m,
-                    toolStatus: status,
-                  }
+                  ...m,
+                  toolStatus: status,
+                }
                 : m
             )
           );
@@ -101,13 +101,13 @@ export const useWllama = (initialMessages: any[] = []) => {
           return prev.map((m) =>
             m.id === aiMsgId
               ? {
-                  ...m,
-                  message: {
-                    ...m.message,
-                    content: m.message.content + textToAdd,
-                  },
-                  status: "typing",
-                }
+                ...m,
+                message: {
+                  ...m.message,
+                  content: m.message.content + textToAdd,
+                },
+                status: "typing",
+              }
               : m
           );
         });
@@ -139,13 +139,13 @@ export const useWllama = (initialMessages: any[] = []) => {
         prev.map((m) =>
           m.id === aiMsgId
             ? {
-                ...m,
-                message: {
-                  ...m.message,
-                  content: "Error during generation.",
-                },
-                status: "error",
-              }
+              ...m,
+              message: {
+                ...m.message,
+                content: "Error during generation.",
+              },
+              status: "error",
+            }
             : m
         )
       );
@@ -165,18 +165,22 @@ export const useWllama = (initialMessages: any[] = []) => {
         return prev.map((m, idx) =>
           idx === prev.length - 1
             ? {
-                ...m,
-                status: "success",
-                message: {
-                  ...m.message,
-                  content: m.message.content + " [Stopped]",
-                },
-              }
+              ...m,
+              status: "success",
+              message: {
+                ...m.message,
+                content: m.message.content + " [Stopped]",
+              },
+            }
             : m
         );
       }
       return prev;
     });
+  };
+
+  const clearMessages = () => {
+    setMessages([]);
   };
 
   return {
@@ -186,5 +190,6 @@ export const useWllama = (initialMessages: any[] = []) => {
     loadingProgress,
     handleRequest,
     handleStop,
+    clearMessages,
   };
 };

@@ -1,19 +1,20 @@
 import React, { useRef, useEffect, useState } from "react";
-import { Bubble, Sender, Welcome, Prompts } from "@ant-design/x";
+import { Bubble, Sender, Welcome, Prompts, Think } from "@ant-design/x";
 import XMarkdown from "@ant-design/x-markdown";
-import { Flex, Avatar, Alert, GetProp, Collapse } from "antd";
+import { Flex, Avatar, Alert, GetProp, Typography, Button, Space, Tooltip } from "antd";
 import {
   UserOutlined,
   RobotOutlined,
   FireOutlined,
   LoadingOutlined,
   BulbOutlined,
+  ToolOutlined,
 } from "@ant-design/icons";
 import {
   XAxis,
   YAxis,
   CartesianGrid,
-  Tooltip,
+  Tooltip as RechartsTooltip,
   Legend,
   ResponsiveContainer,
   LineChart,
@@ -37,39 +38,18 @@ const parseMessageContent = (content: string) => {
   if (closingThinkIndex !== -1) {
     let thinkingContent = content.substring(0, closingThinkIndex).trim();
     thinkingContent = thinkingContent.replace(/^<think>\s*/i, "");
-    thinking = `\`<think>\`\n${thinkingContent}\n\`</think>\``;
+    thinking = thinkingContent;
     response = content
       .substring(closingThinkIndex + closingThinkTag.length)
       .trim();
     hasThinking = true;
   } else if (slashThinkIndex !== -1) {
-    // Handle /think style
-    // Assume /think starts the block. We need to find where it ends.
-    // If there is no explicit end, we might assume the whole start is thinking?
-    // Or maybe the user implies /think is just a marker.
-    // Let's assume /think ... \n\n is the block or it continues until some other marker?
-    // For now, let's treat everything after /think as thinking if it's at the start,
-    // but usually there is an answer.
-    // Let's try to split by double newline if possible, or just display it all as thinking if no clear separation.
-    // Actually, usually /think is followed by text.
-    // Let's just format it nicely.
     let thinkingContent = content
       .substring(slashThinkIndex + slashThinkTag.length)
       .trim();
-    thinking = `\`${slashThinkTag}\`\n${thinkingContent}`;
-    // If we can't separate response, we just show thinking.
-    // But usually the model will output /think ... then the answer.
-    // If the user provided specific docs, maybe there is a /endthink?
-    // Without it, it's hard to separate.
-    // Let's assume for now we just highlight it.
+    thinking = thinkingContent;
     response = ""; // If everything is thinking
     hasThinking = true;
-
-    // Heuristic: if there is a "Here is the answer" or similar, split?
-    // Or maybe the model outputs /think [reasoning] [answer]
-    // Let's try to find a double newline after some text?
-    // For safety, let's just display everything in the thinking block if we detect /think
-    // and let the user see it.
   }
 
   // 2. Parse Tool Calls (Charts)
@@ -99,6 +79,10 @@ interface ChatAreaProps {
   loadingProgress: string;
   onSendMessage: (content: string) => void;
   onCancel: () => void;
+  welcomeTitle?: string;
+  welcomeDescription?: string;
+  onToggleRestrictions?: () => void;
+  restrictionsEnabled?: boolean;
 }
 
 export const ChatArea: React.FC<ChatAreaProps> = ({
@@ -107,8 +91,15 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
   loadingProgress,
   onSendMessage,
   onCancel,
+  welcomeTitle = "Hello, I'm your AI Assistant",
+  welcomeDescription = "I'm ready to help you!",
+  onToggleRestrictions,
+  restrictionsEnabled = false,
 }) => {
   const [value, setValue] = useState("");
+  const [thinkingEnabled, setThinkingEnabled] = useState(true);
+
+  // ... (existing refs/useEffect) ...
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -129,68 +120,57 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
     },
   ];
 
-  // --- NEW: Track thinking state for streaming ---
-  /*
-  const [thinkingOpenMap, setThinkingOpenMap] = useState(
-    {} as Record<string, boolean>
+  const isGenerating = messages.some(
+    (m) => m.status === "loading" || m.status === "typing"
   );
-  useEffect(() => {
-    const newMap: Record<string, boolean> = {};
-    messages.forEach((msg) => {
-      const isAI = msg.message.role === "ai";
-      const parsed = isAI ? parseMessageContent(msg.message.content) : null;
-      if (isAI && parsed && parsed.hasThinking) {
-        newMap[msg.id] = msg.status === "loading";
-      }
-    });
-    setThinkingOpenMap(newMap);
-    // eslint-disable-next-line
-  }, [messages]);
-  */
-
-  // --- Track thinking state for streaming ---
-  /*
-  const [thinkingDraft, setThinkingDraft] = useState(
-    {} as Record<string, string>
-  );
-  useEffect(() => {
-    // Track live thinking for each AI message
-    const newDraft: Record<string, string> = {};
-    messages.forEach((msg) => {
-      const isAI = msg.message.role === "ai";
-      if (isAI && msg.status === "loading") {
-        // Show everything up to </think> or end
-        const content = msg.message.content;
-        const closingThinkTag = "</think>";
-        const closingThinkIndex = content.indexOf(closingThinkTag);
-        if (closingThinkIndex !== -1) {
-          newDraft[msg.id] = content.substring(
-            0,
-            closingThinkIndex + closingThinkTag.length
-          );
-        } else {
-          newDraft[msg.id] = content;
-        }
-      }
-    });
-    setThinkingDraft(newDraft);
-  }, [messages]);
-  */
 
   return (
     <div
       style={{
         padding: "24px",
-        paddingTop: "60px", // Increased padding to prevent topbar from hiding alerts
+        paddingTop: "20px",
         display: "flex",
         flexDirection: "column",
         height: "100%",
         maxWidth: "800px",
         margin: "0 auto",
         width: "100%",
-        overflow: "hidden", // Prevent double scrollbars
+        overflow: "hidden",
       }}
     >
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "16px",
+        }}
+      >
+        <Typography.Title level={4} style={{ margin: 0 }}>
+          Chat
+        </Typography.Title>
+        <Space>
+          {onToggleRestrictions && (
+            <Tooltip title="When enabled, the AI uses the Pet Store example API and Chart generation tools.">
+              <Button
+                type={restrictionsEnabled ? "primary" : "default"}
+                icon={<ToolOutlined />}
+                onClick={onToggleRestrictions}
+              >
+                Restrictions: {restrictionsEnabled ? "ON" : "OFF"}
+              </Button>
+            </Tooltip>
+          )}
+          <Button
+            type={thinkingEnabled ? "primary" : "default"}
+            icon={<BulbOutlined />}
+            onClick={() => setThinkingEnabled(!thinkingEnabled)}
+          >
+            Thinking: {thinkingEnabled ? "ON" : "OFF"}
+          </Button>
+        </Space>
+      </div>
+
       <Alert
         title="English Only Mode"
         description="This agent is optimized for English to reduce hallucinations. Please interact in English for best results."
@@ -218,9 +198,8 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
         {messages.length === 0 && !loadingModel && (
           <Welcome
             variant="borderless"
-            icon="https://mdn.alipayobjects.com/huamei_iwk9zp/afts/img/A*s5sNRo5LjfQAAAAAAAAAAAAADgCCAQ/original"
-            title="Hello, I'm your AI Assistant"
-            description="I'm running EXAONE 4.0 (1.2B) - Optimized for RAG & Logic!"
+            title={welcomeTitle}
+            description={welcomeDescription}
             extra={
               <Prompts
                 title="Do you want to?"
@@ -238,43 +217,54 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
           const isAI = msg.message.role === "ai";
           const parsed = isAI ? parseMessageContent(msg.message.content) : null;
 
-          // Always show collapse for AI messages
-          let showCollapse = false;
+          // Always show collapse for AI messages if Thinking is Enabled
+          let showThinking = false;
           let thinkingContent = "";
           let showResponse = false;
-          // let collapseActiveKey = [];
-          if (isAI) {
-            const content = msg.message.content;
-            const closingThinkTag = "</think>";
-            const closingThinkIndex = content.indexOf(closingThinkTag);
-            if (
-              msg.status === "loading" ||
-              (closingThinkIndex === -1 && msg.status !== "success")
-            ) {
-              // While streaming or no </think> yet, show all content in collapse
-              showCollapse = true;
-              thinkingContent = content;
-              showResponse = false;
-              // collapseActiveKey = ["thinking"];
-            } else if (closingThinkIndex !== -1 && msg.status === "success") {
-              // When </think> appears and finished, show collapse closed, show response
-              showCollapse = true;
-              thinkingContent = content.substring(
-                0,
-                closingThinkIndex + closingThinkTag.length
-              );
-              showResponse = true;
-              // collapseActiveKey = [];
-            }
-          }
 
-          // Debug logging
-          if (isAI && parsed) {
-            console.log("🔍 AI Message Content:", msg.message.content);
-            console.log("🧠 Parsed Thinking:", parsed.thinking);
-            console.log("💬 Parsed Response:", parsed.response);
-            console.log("✅ Has Thinking:", parsed.hasThinking);
-            console.log("📊 Has Chart:", !!parsed.chartData);
+          if (isAI && thinkingEnabled) {
+            if (parsed && parsed.thinking) {
+              showThinking = true;
+              thinkingContent = parsed.thinking;
+            }
+            // If we have parsed thinking, check if we have response
+            if (parsed && parsed.response) {
+              showResponse = true;
+            } else if (msg.status === 'success' && parsed && !parsed.thinking) {
+              // If success and no thinking, just response
+              showResponse = true;
+            } else if (!parsed?.thinking && (msg.status === 'loading' || msg.status === 'typing')) {
+              // Streaming, potentially just thinking
+              // If we detect <think> start but no end, it's thinking
+              if (msg.message.content.includes("<think>")) {
+                showThinking = true;
+                thinkingContent = msg.message.content.replace(/^<think>/, "");
+                showResponse = false;
+              } else {
+                // Normal content
+                showResponse = true;
+              }
+            }
+
+            // Fallback for partial thinking
+            if (parsed && parsed.thinking) {
+              showThinking = true;
+              thinkingContent = parsed.thinking;
+            }
+            if (parsed && parsed.response) {
+              showResponse = true;
+            }
+            if (!parsed?.thinking && !parsed?.response && msg.message.content) {
+              // Raw content
+              showResponse = true;
+            }
+
+          } else if (isAI && !thinkingEnabled) {
+            if (parsed && parsed.response) {
+              showResponse = true;
+            } else if (!parsed?.thinking && msg.message.content) {
+              showResponse = true;
+            }
           }
 
           return (
@@ -284,58 +274,25 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
                 content={
                   isAI ? (
                     <div>
-                      {/* Always show Thinking Section - Collapsible */}
-                      {showCollapse && (
-                        <Collapse
-                          size="small"
-                          items={[
-                            {
-                              key: "thinking",
-                              label: (
-                                <div
-                                  style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "8px",
-                                    color: "#1890ff",
-                                  }}
-                                >
-                                  <BulbOutlined />
-                                  <span>Thinking Process</span>
-                                </div>
-                              ),
-                              children: (
-                                <div
-                                  style={{
-                                    fontSize: "13px",
-                                    color: "#666",
-                                    fontStyle: "italic",
-                                  }}
-                                >
-                                  <XMarkdown>{thinkingContent}</XMarkdown>
-                                </div>
-                              ),
-                            },
-                          ]}
-                          style={{
-                            marginBottom: "12px",
-                            background: "rgba(24, 144, 255, 0.05)",
-                            borderColor: "rgba(24, 144, 255, 0.2)",
-                            borderRadius: "8px",
-                          }}
-                          // Remove controlled activeKey so user can open/close
-                        />
+                      {/* Think for Thinking */}
+                      {showThinking && thinkingEnabled && (
+                        <Think
+                          title="Thinking Process"
+                          blink
+                          loading={msg.status === "loading" && !showResponse}
+                          defaultExpanded={false}
+                        >
+                          <XMarkdown>{thinkingContent}</XMarkdown>
+                        </Think>
                       )}
-                      {/* After thinking ends, show response outside collapse */}
-                      {showResponse && (
-                        <>
-                          <XMarkdown>
-                            {msg.message.content.substring(
-                              msg.message.content.indexOf("</think>") + 8
-                            )}
-                          </XMarkdown>
-                        </>
+
+                      {/* Show Response */}
+                      {(showResponse || (!thinkingEnabled && isAI)) && (
+                        <XMarkdown>
+                          {parsed?.response || msg.message.content.replace(/<think>[\s\S]*?<\/think>/, "")}
+                        </XMarkdown>
                       )}
+
                       {/* Chart Section */}
                       {parsed && parsed.chartData && (
                         <ResponsiveContainer
@@ -348,7 +305,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
                             <CartesianGrid strokeDasharray="3 3" />
                             <XAxis dataKey={parsed.chartData.xKey || "name"} />
                             <YAxis />
-                            <Tooltip />
+                            <RechartsTooltip />
                             <Legend />
                             <Line
                               type="monotone"
@@ -358,8 +315,9 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
                           </LineChart>
                         </ResponsiveContainer>
                       )}
+
                       {/* Tool Status Indicator and Live Speed */}
-                      {msg.status === "loading" && (
+                      {(msg.status === "loading" || msg.status === "typing") && (
                         <div
                           style={{
                             fontSize: "12px",
@@ -371,7 +329,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
                           }}
                         >
                           <LoadingOutlined spin />
-                          <span>{msg.toolStatus || "Thinking..."}</span>
+                          <span>{msg.toolStatus || "Generating..."}</span>
                           {/* Live speed if available */}
                           {msg.metrics && (
                             <>
@@ -415,7 +373,8 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
               />
             </div>
           );
-        })}
+        })
+        }
         <div ref={messagesEndRef} />
       </Flex>
 
@@ -424,14 +383,19 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
           value={value}
           onChange={setValue}
           onSubmit={(v) => {
+            if (isGenerating) return;
             setValue("");
             onSendMessage(v);
           }}
           onCancel={onCancel}
-          loading={messages.some((m) => m.status === "loading")}
-          disabled={loadingModel}
+          loading={isGenerating}
+          disabled={loadingModel} // Fixed: Do not disable on isGenerating to allow stop
           placeholder={
-            loadingModel ? "Waiting for model to load..." : "Type a message..."
+            loadingModel
+              ? "Waiting for model to load..."
+              : isGenerating
+                ? "Waiting for response..."
+                : "Type a message..."
           }
         />
       </div>

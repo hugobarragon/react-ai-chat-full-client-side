@@ -8,9 +8,27 @@ const QwenPage: React.FC = () => {
   const [conversationItems] = useState([
     { key: "0", label: "Qwen 3 (WebLLM)", group: "Today" },
   ]);
+  const [restrictionsEnabled, setRestrictionsEnabled] = useState(false);
 
-  const { messages, handleRequest, handleStop, loadingModel, loadingProgress } =
-    useWebLLM([]);
+  const { messages, handleRequest, handleStop, loadingModel, loadingProgress, clearMessages } =
+    useWebLLM([], restrictionsEnabled);
+
+  const handleNewChat = async () => {
+    // Clear the current messages
+    clearMessages();
+
+    // Optionally reset the engine session
+    const { resetWebLLM } = await import("./services/webllm");
+    await resetWebLLM();
+
+    // Create a new conversation item
+    // const newKey = Date.now().toString();
+    // For now, we reuse the same item or just reset. 
+    // Setting a new key allows the Sidebar to show a new item if we were managing list.
+    // But since list is static, we just reset. 
+    // If user wants history *list*, we need to update conversationItems.
+    // Let's at least visually indicate a reset.
+  };
 
   return (
     <div style={{ display: "flex", height: "100%", width: "100%" }}>
@@ -18,7 +36,7 @@ const QwenPage: React.FC = () => {
         items={conversationItems}
         activeKey={activeKey}
         onActiveChange={setActiveKey}
-        onNewChat={() => {}}
+        onNewChat={handleNewChat}
       />
       <ChatArea
         messages={messages}
@@ -26,6 +44,10 @@ const QwenPage: React.FC = () => {
         onCancel={handleStop}
         loadingModel={loadingModel}
         loadingProgress={loadingProgress}
+        welcomeTitle="Hello, I'm Qwen 3"
+        welcomeDescription="I run on your GPU via WebLLM! (Fast)"
+        onToggleRestrictions={() => setRestrictionsEnabled(!restrictionsEnabled)}
+        restrictionsEnabled={restrictionsEnabled}
       />
     </div>
   );

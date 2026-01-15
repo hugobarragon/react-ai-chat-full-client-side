@@ -47,7 +47,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
           type="primary"
           size="large"
           icon={<RobotOutlined />}
-          onClick={() => onNavigate("exaone")}
+          onClick={() => onNavigate("qwen")}
           style={{
             height: "50px",
             fontSize: "16px",

@@ -1,17 +1,19 @@
 # React AI Chat (Full Client-Side)
-
 This project runs a chatbot with LLM, entirely on the client-side with no server-side costs.
 
-## Model Hosting & GitHub Limits
+## Features
+- **Dual Model Support:**
+  - **Qwen 3 (WebLLM):** Runs on WebGPU for high-speed performance (requires compatible GPU).
+  - **EXAONE 4.0 (Wllama/GGUF):** Runs on CPU via WebAssembly (works on any device).
+- **Thinking Mode:** View the AI's "Thinking Process" to understand how it arrives at an answer.
+- **Client-Side Only:** No API keys, no server costs. Everything runs in your browser.
 
-Currently, this project is configured to fetch the GGUF model file (EXAONE 4.0 1.2B) from a remote URL (Hugging Face) during runtime.
+## Model Hosting
+The project automatically fetches models:
+- **Qwen 3:** Fetched via WebLLM from MLC AI's huggingface CDN.
+- **EXAONE 4.0:** Fetched as a GGUF from Hugging Face.
 
-You can host the model file locally within the frontend `public` folder for a completely offline experience. However, GitHub has a strict file size limit of 100MB per file. Since even lightweight LLM models (like the 1.2B parameter ones) are typically around 750MB+, we cannot store the model directly in this GitHub repository.
-
-To run locally without internet:
-1. Download the `EXAONE-4.0-1.2B-Q4_K_M.gguf` file.
-2. Place it in the `public/models/` directory.
-3. Update `src/services/wllama.ts` to point to `window.location.origin + "/models/EXAONE-4.0-1.2B-Q4_K_M.gguf"` instead of the remote URL.
+You can allow offline usage for Exaone by placing the `EXAONE-4.0-1.2B-Q4_K_M.gguf` in `public/models/` and updating `src/services/wllama.ts`.
 
 ## React + TypeScript + Vite
 

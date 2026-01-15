@@ -20,14 +20,14 @@ function App() {
       label: "Home",
     },
     {
-      key: "exaone",
-      icon: <RobotOutlined style={{ color: "purple" }} />,
-      label: "Exaone (GGUF)",
-    },
-    {
       key: "qwen",
       icon: <BulbOutlined style={{ color: "orange" }} />,
-      label: "Qwen 3 (WebLLM)",
+      label: "Qwen 3 0.6B (WebLLM - GPU Fast)",
+    },
+    {
+      key: "exaone",
+      icon: <RobotOutlined style={{ color: "purple" }} />,
+      label: "Exaone 4.0 1.2B (GGUF - CPU)",
     },
   ];
 
