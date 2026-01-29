@@ -3,10 +3,10 @@ import { Sidebar } from "./components/Sidebar";
 import { ChatArea } from "./components/ChatArea";
 import { useWllama } from "./hooks/useWllama";
 
-const ExaonePage: React.FC = () => {
+const LfmPage: React.FC = () => {
   const [activeKey, setActiveKey] = useState("0");
   const [conversationItems] = useState([
-    { key: "0", label: "Exaone Model", group: "Today" },
+    { key: "0", label: "LFM Reasoning", group: "Today" },
   ]);
 
   const { messages, handleRequest, handleStop, loadingModel, loadingProgress, clearMessages } =
@@ -30,11 +30,11 @@ const ExaonePage: React.FC = () => {
         onCancel={handleStop}
         loadingModel={loadingModel}
         loadingProgress={loadingProgress}
-        welcomeTitle="Hello, I'm EXAONE 4.0"
-        welcomeDescription="I run on your CPU via Wllama! (Optimized for Logic)"
+        welcomeTitle="Hello, I'm LFM 2.5 Reasoning"
+        welcomeDescription="I run on your CPU via Wllama! (1.2B Thinking Model)"
       />
     </div>
   );
 };
 
-export default ExaonePage;
+export default LfmPage;

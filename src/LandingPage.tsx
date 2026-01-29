@@ -37,7 +37,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
           marginBottom: "40px",
         }}
       >
-        Experience the power of local AI with <strong>EXAONE 4.0</strong> and{" "}
+        Experience the power of local AI with <strong>LFM 2.5</strong> and{" "}
         <strong>Qwen 3</strong> - cutting-edge language models running entirely
         in your browser using WebGPU and WebAssembly.
       </Paragraph>

@@ -13,11 +13,13 @@ const CONFIG_PATHS = {
     "https://cdn.jsdelivr.net/npm/@wllama/wllama@2.3.7/esm/multi-thread/wllama.wasm",
   "multi-thread/wllama.worker.mjs":
     "https://cdn.jsdelivr.net/npm/@wllama/wllama@2.3.7/esm/multi-thread/wllama.worker.mjs",
+  // "model-shard-00001-of-0000X.gguf": "...", // If we need sharded models
 };
 
 // Model URL - Remote GGUF from Hugging Face
+// Using LiquidAI LFM 2.5 1.2B Thinking GGUF
 const MODEL_URL =
-  "https://huggingface.co/LGAI-EXAONE/EXAONE-4.0-1.2B-GGUF/resolve/main/EXAONE-4.0-1.2B-Q4_K_M.gguf";
+  "https://huggingface.co/NexaAI/LFM2.5-1.2B-thinking-GGUF/resolve/main/LFM2.5-1.2B-Thinking-Q4_K_M.gguf";
 
 let wllama: Wllama | null = null;
 
@@ -38,7 +40,7 @@ export const initWllama = async () => {
   return wllama;
 };
 
-export const stopExaone = async () => {
+export const stopLfm = async () => {
   if (wllama) {
     console.log("Stopping Wllama...");
     await wllama.exit();
@@ -46,32 +48,32 @@ export const stopExaone = async () => {
   }
 };
 
-export const loadExaoneModel = async (onProgress?: (text: string) => void) => {
+export const loadLfmModel = async (onProgress?: (text: string) => void) => {
   const engine = await initWllama();
 
   if (await engine.isModelLoaded()) {
     return;
   }
 
-  console.log("Downloading/Loading Exaone Model...");
+  console.log("Downloading/Loading Model...");
   if (onProgress) onProgress("Initializing download...");
 
   const threads = navigator.hardwareConcurrency
-    ? Math.max(1, navigator.hardwareConcurrency - 1)
-    : undefined;
+    ? Math.max(1, navigator.hardwareConcurrency - 2)
+    : 1;
   console.log(`Using ${threads} threads`);
 
   await engine.loadModelFromUrl(MODEL_URL, {
-    n_ctx: 2048, // Reduced context window to save memory and improve speed
+    n_ctx: 4096, // LFM supports larger context, 4096 is manageable on client
     n_batch: 512, // Process tokens in larger batches during prefill
-    n_threads: threads, // Use all available cores
+    n_threads: threads,
     progressCallback: (opts) => {
       // Safe access to progress properties
       const loaded = (opts as any).loaded || 0;
       const total = (opts as any).total || 0;
       if (total > 0) {
         const progress = Math.round((loaded / total) * 100);
-        if (onProgress) onProgress(`Downloading Exaone: ${progress}%`);
+        if (onProgress) onProgress(`Downloading Model: ${progress}%`);
       }
     },
   });
@@ -81,32 +83,32 @@ export const loadExaoneModel = async (onProgress?: (text: string) => void) => {
 
 const decoder = new TextDecoder();
 
-export const chatExaone = async (
+export const chatLfm = async (
   messageOrPrompt: string,
   onToken: (token: string) => void,
   onDebug?: (msg: string) => void,
   onStatus?: (status: string) => void,
   isRawPrompt = false
 ) => {
-  console.log("Starting chatExaone...");
-  onDebug?.("Initializing Wllama in chatExaone...");
+  console.log("Starting chatLfm...");
+  onDebug?.("Initializing Wllama in chatLfm...");
 
   try {
     // Ensure model is loaded before chat
-    await loadExaoneModel((msg) => {
+    await loadLfmModel((msg) => {
       console.log("[Model Status]", msg);
       onDebug?.(`[Model Status] ${msg}`);
     });
 
     const engine = await initWllama();
 
-    // EXAONE 4.0 Thinking Mode & Tool Use
-    // Temperature >= 0.6 enables reasoning capabilities
+    // Thinking Mode & Tool Use
+    // Temperature >= 0.6 recommended for reasoning capabilities
 
     const formattedPrompt = isRawPrompt
       ? messageOrPrompt
-      : `[|system|]
-You are EXAONE, an AI assistant.
+      : `<|im_start|>system
+You are LFM, an AI assistant by Liquid AI.
 Respond to the user in English.
 # Available Tools
 You can use none, one, or multiple of the following tools by calling them as functions to help with the user’s query.
@@ -126,11 +128,11 @@ ${JSON.stringify(petStoreToolDefinition)}
 
 For each function call you want to make, return a JSON object with function name and arguments within <tool_call> and </tool_call> tags, like:
 <tool_call>{"name": "generate_chart", "arguments": {"type": "line", "title": "Sales", "data": [...], "xKey": "name", "yKey": "value"}}</tool_call>
-[|endofturn|]
-[|user|]
+<|im_end|>
+<|im_start|>user
 ${messageOrPrompt}
-[|endofturn|]
-[|assistant|]
+<|im_end|>
+<|im_start|>assistant
 <think>
 `;
 
@@ -146,20 +148,20 @@ ${messageOrPrompt}
     onDebug?.("Prompt prepared. calling createCompletion...");
 
     let completion = (await engine.createCompletion(formattedPrompt, {
-      nPredict: 1024, // Increased for thinking + response
+      nPredict: 2048, // Increased for thinking + response
       sampling: {
-        temp: 0.7, // Thinking mode: temp >= 0.6
-        top_k: 40,
+        temp: 0.05, // LFM 2.5 Thinking recommended: 0.05
+        top_k: 50, // Recommended: 50
         top_p: 0.95,
+        penalty_repeat: 1.05, // Recommended: 1.05
       },
       // @ts-ignore
-      stop: ["[|user|]", "[|system|]"],
+      stop: ["<|im_end|>", "<|im_start|>"],
       onNewToken: (_token, piece, _currentText) => {
         try {
           if (firstTokenTime === 0) firstTokenTime = Date.now();
           tokenCount++;
           const text = decoder.decode(piece, { stream: true });
-          console.log("Token received:", text);
           onDebug?.(`Token: ${JSON.stringify(text)}`);
           onToken(text);
         } catch (e) {
@@ -217,9 +219,10 @@ ${messageOrPrompt}
       },
     };
   } catch (e) {
-    console.error("Error in chatExaone:", e);
+    console.error("Error in chatLfm:", e);
     throw e;
   }
 };
 
 export const getWllamaInstance = () => wllama;
+

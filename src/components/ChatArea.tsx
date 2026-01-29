@@ -114,9 +114,21 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
   const items: GetProp<typeof Prompts, "items"> = [
     {
       key: "1",
+      icon: <BulbOutlined style={{ color: "#faad14" }} />,
+      label: "Explain Concept",
+      description: "Explain the theory of relativity in simple terms.",
+    },
+    {
+      key: "2",
+      icon: <ToolOutlined style={{ color: "#1890ff" }} />,
+      label: "Write Code",
+      description: "Write a JavaScript function to filter an array of objects.",
+    },
+    {
+      key: "3",
       icon: <FireOutlined style={{ color: "#ff4d4f" }} />,
-      label: "Hot Topics",
-      description: "What are our trending technologies?",
+      label: "Creative Task",
+      description: "Write a haiku about artificial intelligence.",
     },
   ];
 
@@ -341,6 +353,19 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
                               </span>
                             </>
                           )}
+                        </div>
+                      )}
+
+                      {msg.status !== "typing" && msg.status !== "loading" && msg.timestamp && (
+                        <div
+                          style={{
+                            fontSize: "10px",
+                            color: "#999",
+                            marginTop: "8px",
+                            textAlign: "right",
+                          }}
+                        >
+                          {msg.timestamp}
                         </div>
                       )}
                     </div>

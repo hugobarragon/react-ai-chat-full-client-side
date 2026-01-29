@@ -1879,6 +1879,11 @@ clsx@^2.1.1:
   resolved "https://registry.npmjs.org/clsx/-/clsx-2.1.1.tgz"
   integrity sha512-eYm0QWBtUrBWZWG0d386OGAw16Z995PiOVo2B7bjWSbHedGl5e0ZWaq65kOGgUSNesEIDkB9ISbTg/JK9dhCZA==
 
+coi-serviceworker@^0.1.7:
+  version "0.1.7"
+  resolved "https://registry.yarnpkg.com/coi-serviceworker/-/coi-serviceworker-0.1.7.tgz#a105739386bf7101cdbaa32a167c576ca3376200"
+  integrity sha512-bjSUqEngCPOkErY2vbyWsaIGCNRODYzlNycaREVw5s12/C8SM+RnRUUeX6pZbTtov6C52ZLY/+tvHK+BDxuUuA==
+
 color-convert@^2.0.1:
   version "2.0.1"
   resolved "https://registry.npmjs.org/color-convert/-/color-convert-2.0.1.tgz"

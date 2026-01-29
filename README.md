@@ -4,16 +4,28 @@ This project runs a chatbot with LLM, entirely on the client-side with no server
 ## Features
 - **Dual Model Support:**
   - **Qwen 3 (WebLLM):** Runs on WebGPU for high-speed performance (requires compatible GPU).
-  - **EXAONE 4.0 (Wllama/GGUF):** Runs on CPU via WebAssembly (works on any device).
+  - **LFM 2.5 (Wllama/GGUF):** Runs on CPU via WebAssembly (works on any device).
 - **Thinking Mode:** View the AI's "Thinking Process" to understand how it arrives at an answer.
 - **Client-Side Only:** No API keys, no server costs. Everything runs in your browser.
 
 ## Model Hosting
 The project automatically fetches models:
 - **Qwen 3:** Fetched via WebLLM from MLC AI's huggingface CDN.
-- **EXAONE 4.0:** Fetched as a GGUF from Hugging Face.
+- **LFM 2.5:** Fetched as a GGUF from Hugging Face.
 
-You can allow offline usage for Exaone by placing the `EXAONE-4.0-1.2B-Q4_K_M.gguf` in `public/models/` and updating `src/services/wllama.ts`.
+You can allow offline usage for LFM by placing the `LFM2.5-1.2B-Thinking-Q4_K_M.gguf` in `public/models/` and updating `src/services/wllama.ts`.
+
+## Deployment & Warnings
+
+### GitHub Pages & Multi-threading
+To enable multi-threading (WASM) on GitHub Pages, we use `coi-serviceworker`. This is necessary because GitHub Pages does not support the required `Cross-Origin-Embedder-Policy` headers nativey.
+- **Note:** `coi-serviceworker.min.js` MUST be served from the same origin (locally copied to `public/`), it cannot be loaded from a CDN.
+
+### Common Warnings
+- **"Multi-threads are not supported... falling back to single-thread"**: If seen on deployment, it means the service worker hasn't loaded (refresh the page). Locally, this shouldn't appear if proper headers are set.
+- **"special_eos_id is not in special_eog_ids"**: A harmless warning about tokenizer metadata. We handle stop tokens manually (`<|im_end|>`).
+- **"munmap failed: Invalid argument"**: A common WebAssembly teardown warning, safe to ignore.
+- **"n_ctx_seq < n_ctx_train"**: Informational only; we limit context to 4096 tokens for browser performance (model supports 65k).
 
 ## React + TypeScript + Vite
 

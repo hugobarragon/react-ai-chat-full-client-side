@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { loadExaoneModel, chatExaone, stopExaone } from "../services/wllama";
+import { loadLfmModel, chatLfm, stopLfm } from "../services/wllama";
 
 export const useWllama = (initialMessages: any[] = []) => {
   const [messages, setMessages] = useState<any[]>(initialMessages);
@@ -13,7 +13,7 @@ export const useWllama = (initialMessages: any[] = []) => {
 
     const load = async () => {
       try {
-        await loadExaoneModel((progress) => {
+        await loadLfmModel((progress) => {
           setLoadingProgress(progress);
         });
         setLoadingModel(false);
@@ -39,7 +39,6 @@ export const useWllama = (initialMessages: any[] = []) => {
       id: aiMsgId,
       message: { role: "ai", content: "" },
       status: "loading",
-      timestamp: new Date().toLocaleString(),
     };
 
     setMessages((prev) => [...prev, userMsg, aiMsg]);
@@ -50,7 +49,7 @@ export const useWllama = (initialMessages: any[] = []) => {
       let lastUpdateTime = Date.now();
       const BATCH_INTERVAL_MS = 16; // Update UI every 16ms (~60fps) for very fast streaming
 
-      const result = await chatExaone(
+      const result = await chatLfm(
         content,
         (currentText) => {
           tokenBuffer += currentText;
@@ -113,11 +112,27 @@ export const useWllama = (initialMessages: any[] = []) => {
         });
       }
 
+      const finalTime = new Date();
+
       setMessages((prev) =>
-        prev.map((m) =>
-          m.id === aiMsgId
-            ? { ...m, status: "success", metrics: result.metrics }
+        prev.map((m) => {
+          return m.id === aiMsgId
+            ? {
+              ...m,
+              status: "success",
+              metrics: result.metrics,
+              timestamp: finalTime.toLocaleString(undefined, {
+                year: "numeric",
+                month: "numeric",
+                day: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit",
+              }),
+            }
             : m
+        }
+
         )
       );
 
@@ -145,6 +160,7 @@ export const useWllama = (initialMessages: any[] = []) => {
                 content: "Error during generation.",
               },
               status: "error",
+              timestamp: new Date().toLocaleString(),
             }
             : m
         )
@@ -153,7 +169,7 @@ export const useWllama = (initialMessages: any[] = []) => {
   };
 
   const handleStop = async () => {
-    await stopExaone();
+    await stopLfm();
     setMessages((prev) => {
       // Find the last message (which should be the AI one loading/typing) and mark it as stopped/error
       const lastMsg = prev[prev.length - 1];
@@ -171,6 +187,7 @@ export const useWllama = (initialMessages: any[] = []) => {
                 ...m.message,
                 content: m.message.content + " [Stopped]",
               },
+              timestamp: new Date().toLocaleString(),
             }
             : m
         );

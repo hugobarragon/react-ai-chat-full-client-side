@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Layout, Menu, theme } from "antd";
 import { RobotOutlined, HomeOutlined, BulbOutlined } from "@ant-design/icons";
-import ExaonePage from "./ExaonePage";
+import LfmPage from "./LfmPage";
 import QwenPage from "./QwenPage";
 import { LandingPage } from "./LandingPage";
 
@@ -25,9 +25,9 @@ function App() {
       label: "Qwen 3 0.6B (WebLLM - GPU Fast)",
     },
     {
-      key: "exaone",
+      key: "lfm",
       icon: <RobotOutlined style={{ color: "purple" }} />,
-      label: "Exaone 4.0 1.2B (GGUF - CPU)",
+      label: "LFM 2.5 1.2B Reasoning (GGUF - CPU)",
     },
   ];
 
@@ -62,7 +62,7 @@ function App() {
       </Header>
       <Content style={{ height: "calc(100vh - 64px)", overflow: "auto" }}>
         {current === "home" && <LandingPage onNavigate={setCurrent} />}
-        {current === "exaone" && <ExaonePage />}
+        {current === "lfm" && <LfmPage />}
         {current === "qwen" && <QwenPage />}
       </Content>
     </Layout>

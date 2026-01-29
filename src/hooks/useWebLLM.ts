@@ -44,6 +44,14 @@ export const useWebLLM = (initialMessages: any[] = [], enableRestrictions = fals
                 ...m.message,
                 content: m.message.content + " [Stopped]",
               },
+              timestamp: new Date().toLocaleString(undefined, {
+                year: "numeric",
+                month: "numeric",
+                day: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit",
+              }),
             }
             : m
         );
@@ -64,7 +72,6 @@ export const useWebLLM = (initialMessages: any[] = [], enableRestrictions = fals
       id: aiMsgId,
       message: { role: "ai", content: "" },
       status: "loading",
-      timestamp: new Date().toLocaleString(),
     };
 
     setMessages((prev) => [...prev, userMsg, aiMsg]);
@@ -130,7 +137,7 @@ export const useWebLLM = (initialMessages: any[] = [], enableRestrictions = fals
                   ...m.message,
                   content: m.message.content + textToAdd,
                 },
-                status: "success",
+                status: "typing",
               }
               : m
           );
@@ -140,7 +147,19 @@ export const useWebLLM = (initialMessages: any[] = [], enableRestrictions = fals
       setMessages((prev) =>
         prev.map((m) =>
           m.id === aiMsgId
-            ? { ...m, status: "success", metrics: result.metrics }
+            ? {
+              ...m,
+              status: "success",
+              metrics: result.metrics,
+              timestamp: new Date().toLocaleString(undefined, {
+                year: "numeric",
+                month: "numeric",
+                day: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit",
+              }),
+            }
             : m
         )
       );
@@ -169,6 +188,14 @@ export const useWebLLM = (initialMessages: any[] = [], enableRestrictions = fals
                 content: "Error during generation.",
               },
               status: "error",
+              timestamp: new Date().toLocaleString(undefined, {
+                year: "numeric",
+                month: "numeric",
+                day: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit",
+              }),
             }
             : m
         )
