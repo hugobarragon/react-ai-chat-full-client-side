@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { Layout, Menu, theme } from "antd";
-import { RobotOutlined, HomeOutlined, BulbOutlined } from "@ant-design/icons";
-import LfmPage from "./LfmPage";
+import { HomeOutlined, BulbOutlined } from "@ant-design/icons";
 import QwenPage from "./QwenPage";
 import { LandingPage } from "./LandingPage";
+import { EngineProvider } from "./context/EngineContext";
+import { ModelDownloadStatus } from "./components/ModelDownloadStatus";
 
 const { Header, Content } = Layout;
 
-function App() {
+const AppContent = () => {
   const [current, setCurrent] = useState("home");
   const {
     token: { colorBgContainer },
@@ -22,12 +23,7 @@ function App() {
     {
       key: "qwen",
       icon: <BulbOutlined style={{ color: "orange" }} />,
-      label: "Qwen 3 0.6B (WebLLM - GPU Fast)",
-    },
-    {
-      key: "lfm",
-      icon: <RobotOutlined style={{ color: "purple" }} />,
-      label: "LFM 2.5 1.2B Reasoning (GGUF - CPU)",
+      label: "Qwen 3.5 0.8B (WebLLM - GPU)",
     },
   ];
 
@@ -53,19 +49,26 @@ function App() {
         <Menu
           theme="light"
           mode="horizontal"
-          defaultSelectedKeys={["home"]}
           selectedKeys={[current]}
           items={items}
           onClick={(e) => setCurrent(e.key)}
           style={{ flex: 1, minWidth: 0, borderBottom: "none" }}
         />
+        <ModelDownloadStatus />
       </Header>
       <Content style={{ height: "calc(100vh - 64px)", overflow: "auto" }}>
         {current === "home" && <LandingPage onNavigate={setCurrent} />}
-        {current === "lfm" && <LfmPage />}
         {current === "qwen" && <QwenPage />}
       </Content>
     </Layout>
+  );
+};
+
+function App() {
+  return (
+    <EngineProvider>
+      <AppContent />
+    </EngineProvider>
   );
 }
 

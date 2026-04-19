@@ -15,7 +15,7 @@ export default defineConfig({
       filename: "analyse.html", // will be saved in project's root
     }),
   ],
-  /* for multithreadthing wllama models */
+  /* WebGPU model loading requires COOP/COEP headers for browser compatibility */
   server: {
     headers: {
       "Cross-Origin-Embedder-Policy": "require-corp",

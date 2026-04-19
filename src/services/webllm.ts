@@ -1,12 +1,7 @@
 import { CreateMLCEngine, MLCEngine } from "@mlc-ai/web-llm";
-import {
-  chartToolDefinition,
-  petStoreToolDefinition,
-  executePetStoreRequest,
-} from "../tools";
-
-// Using built-in Qwen3-0.6B-q4f16_1-MLC configuration
-const MODEL_ID = "Qwen3-0.6B-q4f16_1-MLC";
+import systemPromptData from "../systemPrompt";
+import { notification } from "antd";
+import { QWEN_SETTINGS, MODEL_ID, MODEL_CONFIG } from "../constants";
 
 let engine: MLCEngine | null = null;
 
@@ -16,83 +11,101 @@ export const initWebLLM = async (
   if (engine) return engine;
 
   console.log("Initializing WebLLM...");
+  console.log("Loading WebLLM model:", MODEL_ID);
+  console.log("Model URL:", MODEL_CONFIG.model);
+  console.log("Model WASM:", MODEL_CONFIG.model_lib);
   if (onProgress) onProgress("Initializing WebLLM Engine...");
 
-  engine = await CreateMLCEngine(MODEL_ID, {
-    initProgressCallback: (report) => {
-      console.log("WebLLM Progress:", report.text);
-      if (onProgress) onProgress(report.text);
-    },
-    logLevel: "INFO",
-  });
+  try {
+    engine = await CreateMLCEngine(MODEL_ID, {
+      appConfig: {
+        model_list: [MODEL_CONFIG],
+      },
+      initProgressCallback: (report) => {
+        console.log("WebLLM Progress:", report.text);
+        if (onProgress) onProgress(report.text);
+      },
+      logLevel: "INFO",
+    });
 
-  return engine;
+    return engine;
+  } catch (e) {
+    console.error("WebLLM Initialization Error:", e);
+    
+    if (e instanceof Error) {
+      const errorMessage = e.message;
+      
+      if (errorMessage.includes("WebGPU") || errorMessage.includes("gpu")) {
+        notification.error({
+          title: "WebGPU Not Supported",
+          description: "WebGPU is not available in your browser. Please use Chrome 113+, Edge 113+, or Safari 17+ on a supported device.",
+          duration: 10,
+        });
+      } else if (errorMessage.includes("network") || errorMessage.includes("fetch")) {
+        notification.error({
+          title: "Network Error",
+          description: "Failed to load model files. Please check your internet connection and try again.",
+          duration: 10,
+        });
+      } else if (errorMessage.includes("memory") || errorMessage.includes("out of memory")) {
+        notification.error({
+          title: "Out of Memory",
+          description: "Your device doesn't have enough memory to run this model. Try closing other applications.",
+          duration: 10,
+        });
+      } else {
+        notification.error({
+          title: "Initialization Failed",
+          description: errorMessage || "Failed to initialize WebLLM engine.",
+          duration: 10,
+        });
+      }
+    }
+    
+    throw e;
+  }
 };
 
 export const chatWebLLM = async (
-  messageOrPrompt: string,
+  messages: Array<{ role: string; content: string }>,
   onToken: (token: string) => void,
   onStatus?: (status: string) => void,
-  isRawPrompt = false,
-  enableRestrictions = false
+  enableThinking = false
 ) => {
   if (!engine) {
-    throw new Error("Engine not initialized");
+    await initWebLLM((text) => {
+      onStatus?.(text);
+    });
+  }
+
+  const activeEngine = engine;
+  if (!activeEngine) {
+    throw new Error("Engine initialization failed");
   }
 
   onStatus?.("Thinking...");
 
-  let systemPrompt = `You are Qwen, a helpful AI assistant.`;
-
-  if (enableRestrictions) {
-    systemPrompt = `You are Qwen, a helpful AI assistant.
-
-# Tools
-
-You may call one or more functions to assist with the user query.
-
-You are provided with function signatures within <tools></tools> XML tags:
-<tools>
-${JSON.stringify(chartToolDefinition)}
-${JSON.stringify(petStoreToolDefinition)}
-</tools>
-
-For each function call, return a json object with function name and arguments within <tool_call></tool_call> XML tags:
-<tool_call>
-{"name": <function-name>, "arguments": <args-json-object>}
-</tool_call>
-
-# Tool Use Strategy
-1. **Identify Intent**: Does the user want a chart or information about the Pet Store?
-2. **Check Data**: Do you have the real data from the API to answer or plot?
-3. **Action**:
-    - If YES: Proceed with \`generate_chart\` or your answer.
-    - If NO: You **MUST** first call \`petstore_request\` to fetch the data. **Do not** invent or hallucinate data.
-4. **After Tool Output**: Once you receive the data from the tool, THEN you can generate the chart or provide the answer.
-
-/think
-`;
-  } else {
-    // General purpose mode without tools
-    systemPrompt += `\n\nYou are a general purpose assistant. Answer the user's questions to the best of your ability.`;
-  }
-
-  const messages = isRawPrompt
-    ? [{ role: "user", content: messageOrPrompt }]
-    : [
-      { role: "system", content: systemPrompt },
-      { role: "user", content: messageOrPrompt },
-    ];
+  const systemPrompt = systemPromptData.system_prompt;
+  const normalizedMessages =
+    messages.length > 0 && messages[0].role === "system"
+      ? messages
+      : [{ role: "system", content: systemPrompt }, ...messages];
 
   try {
-    const chunks = await engine.chat.completions.create({
-      messages: messages as any,
+    const settings = enableThinking ? QWEN_SETTINGS.thinking : QWEN_SETTINGS.nonThinking;
+    const qwen35ChatOptions = {
+      messages: normalizedMessages as any,
       stream: true,
-      temperature: 0.7,
-    });
+      ...settings,
+      extra_body: {
+        enable_thinking: enableThinking,
+      },
+    };
+
+    const chunks = await activeEngine.chat.completions.create(qwen35ChatOptions);
 
     let fullResponse = "";
-    for await (const chunk of chunks) {
+    for await (const chunk of chunks as AsyncIterable<any>) {
       const content = chunk.choices[0]?.delta?.content || "";
       if (content) {
         fullResponse += content;
@@ -100,44 +113,82 @@ For each function call, return a json object with function name and arguments wi
       }
     }
 
-    // Check for tool calls
-    const toolCallRegex = /<tool_call>([\s\S]*?)<\/tool_call>/;
-    const match = fullResponse.match(toolCallRegex);
-
-    let toolResult = null;
-
-    if (match) {
-      try {
-        const toolCall = JSON.parse(match[1]);
-        if (toolCall.name === "petstore_request") {
-          console.log("Executing Petstore Request:", toolCall.arguments);
-          onStatus?.("⚙️ Executing Petstore Request...");
-
-          toolResult = await executePetStoreRequest(toolCall.arguments);
-          console.log("Petstore Result:", toolResult);
-          onStatus?.("🧠 Analyzing tool data...");
-        }
-      } catch (e) {
-        console.error("Error executing tool:", e);
+    const statsText = await activeEngine.runtimeStatsText();
+    console.log("Runtime stats:", statsText);
+    
+    const prefillMatch = statsText.match(/prefill:\s*([\d.]+)\s*tokens?\/sec/i);
+    const decodeMatch = statsText.match(/decod(?:ing|e):\s*([\d.]+)\s*tokens?\/sec/i);
+    
+    // Extract total tokens generated from fullResponse length (approximately 4 chars per token)
+    // or try to extract from stats text
+    let tokensUsed = Math.ceil(fullResponse.length / 4);
+    
+    // Try to match token count from stats text (handles various formats)
+    const tokenMatches = statsText.match(/(\d+)\s*(?:tok|tokens)/gi);
+    if (tokenMatches && tokenMatches.length > 0) {
+      const lastMatch = tokenMatches[tokenMatches.length - 1];
+      const extracted = parseInt(lastMatch, 10);
+      if (!isNaN(extracted) && extracted > 0) {
+        tokensUsed = extracted;
       }
     }
-
-    // Get runtime stats
-    const statsText = await engine.runtimeStatsText();
-    const prefillMatch = statsText.match(/prefill:\s*([\d.]+)\s*tok\/s/);
-    const decodeMatch = statsText.match(/decode:\s*([\d.]+)\s*tok\/s/);
+    
+    const contextWindow = QWEN_SETTINGS.context_window;
+    
+    // Round speeds to 1 decimal place
+    const prefillSpeed = prefillMatch ? parseFloat(prefillMatch[1]).toFixed(1) : "N/A";
+    const decodeSpeed = decodeMatch ? parseFloat(decodeMatch[1]).toFixed(1) : "N/A";
 
     return {
       text: fullResponse,
-      toolResult,
       metrics: {
         timestamp: new Date().toLocaleString(),
-        prefillSpeed: prefillMatch ? prefillMatch[1] : "N/A",
-        decodeSpeed: decodeMatch ? decodeMatch[1] : "N/A",
+        prefillSpeed,
+        decodeSpeed,
+        tokensUsed,
+        contextWindow,
       },
     };
   } catch (e) {
     console.error("WebLLM Chat Error:", e);
+    
+    // Show notification for different error types
+    if (e instanceof Error) {
+      const errorMessage = e.message;
+      
+      if (errorMessage.includes("max_tokens")) {
+        notification.warning({
+          title: "Response Truncated",
+          description: "The AI response was cut off due to the max_tokens limit. The response may be incomplete.",
+          duration: 5,
+        });
+      } else if (errorMessage.includes("WebGPU") || errorMessage.includes("gpu")) {
+        notification.error({
+          title: "WebGPU Error",
+          description: "WebGPU is not supported or enabled in your browser. Please check your browser and system requirements.",
+          duration: 8,
+        });
+      } else if (errorMessage.includes("network") || errorMessage.includes("fetch")) {
+        notification.error({
+          title: "Network Error",
+          description: "Failed to load model files. Please check your internet connection and try again.",
+          duration: 8,
+        });
+      } else if (errorMessage.includes("memory") || errorMessage.includes("out of memory")) {
+        notification.error({
+          title: "Out of Memory",
+          description: "Your device doesn't have enough memory to run this model. Try closing other applications.",
+          duration: 8,
+        });
+      } else {
+        notification.error({
+          title: "Chat Error",
+          description: errorMessage || "An unexpected error occurred during chat generation.",
+          duration: 5,
+        });
+      }
+    }
+    
     throw e;
   }
 };

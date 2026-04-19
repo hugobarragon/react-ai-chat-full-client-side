@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { initWebLLM, chatWebLLM, interruptWebLLM } from "../services/webllm";
+import systemPromptData from "../systemPrompt";
 
-export const useWebLLM = (initialMessages: any[] = [], enableRestrictions = false) => {
+export const useWebLLM = (initialMessages: any[] = []) => {
   const [messages, setMessages] = useState<any[]>(initialMessages);
   const [loadingModel, setLoadingModel] = useState(true);
   const [loadingProgress, setLoadingProgress] = useState("");
@@ -60,7 +61,7 @@ export const useWebLLM = (initialMessages: any[] = [], enableRestrictions = fals
     });
   };
 
-  const handleRequest = async (content: string) => {
+  const handleRequest = async (content: string, enableThinking = false) => {
     const userMsg = {
       id: Date.now(),
       message: { role: "user", content },
@@ -81,8 +82,26 @@ export const useWebLLM = (initialMessages: any[] = [], enableRestrictions = fals
       let lastUpdateTime = Date.now();
       const BATCH_INTERVAL_MS = 16;
 
+      const requestMessages = [
+        { role: "system", content: systemPromptData.system_prompt },
+        ...messages
+          .filter((m) => m.message?.role && m.message?.content)
+          .map((m) => ({
+            role:
+              m.message.role === "ai"
+                ? "assistant"
+                : m.message.role === "assistant"
+                ? "assistant"
+                : m.message.role === "user"
+                ? "user"
+                : "user",
+            content: m.message.content,
+          })),
+        { role: "user", content },
+      ];
+
       const result = await chatWebLLM(
-        content,
+        requestMessages,
         (currentText) => {
           tokenBuffer += currentText;
           const now = Date.now();
@@ -121,8 +140,7 @@ export const useWebLLM = (initialMessages: any[] = [], enableRestrictions = fals
             )
           );
         },
-        false,
-        enableRestrictions
+        enableThinking
       );
 
       // Flush remaining tokens
@@ -163,19 +181,6 @@ export const useWebLLM = (initialMessages: any[] = [], enableRestrictions = fals
             : m
         )
       );
-
-      // Handle Tool Result as new User Message
-      if (result.toolResult) {
-        // Format tool output using <tool_response> as per Qwen3 template
-        const toolOutputMsg = `<tool_response>\n${JSON.stringify(
-          result.toolResult
-        )}\n</tool_response>`;
-
-        // Trigger new request with tool output
-        setTimeout(() => {
-          handleRequest(toolOutputMsg);
-        }, 100);
-      }
     } catch (err) {
       console.error("Chat error", err);
       setMessages((prev) =>

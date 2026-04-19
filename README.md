@@ -2,18 +2,11 @@
 This project runs a chatbot with LLM, entirely on the client-side with no server-side costs.
 
 ## Features
-- **Dual Model Support:**
-  - **Qwen 3 (WebLLM):** Runs on WebGPU for high-speed performance (requires compatible GPU).
-  - **LFM 2.5 (Wllama/GGUF):** Runs on CPU via WebAssembly (works on any device).
-- **Thinking Mode:** View the AI's "Thinking Process" to understand how it arrives at an answer.
-- **Client-Side Only:** No API keys, no server costs. Everything runs in your browser.
+- **Qwen 3.5 0.8B (WebLLM):** Runs on WebGPU for fast local inference directly in the browser.
+- **Client-Side Only:** No API keys, no server costs. Everything runs locally in your browser.
 
 ## Model Hosting
-The project automatically fetches models:
-- **Qwen 3:** Fetched via WebLLM from MLC AI's huggingface CDN.
-- **LFM 2.5:** Fetched as a GGUF from Hugging Face.
-
-You can allow offline usage for LFM by placing the `LFM2.5-1.2B-Thinking-Q4_K_M.gguf` in `public/models/` and updating `src/services/wllama.ts`.
+The project automatically loads Qwen 3.5 0.8B via WebLLM using the configured MLC AI model bundle.
 
 ## Deployment & Warnings
 
