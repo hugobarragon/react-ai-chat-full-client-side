@@ -4,27 +4,47 @@ YOU CAN USE YARN AND NODE ONLY, NO CLI commands, if you want to read a file read
 
 ## Project: react-ai-chat-full-client-side
 
-Client-side only AI chat. Runs Qwen3.5 0.8B locally in-browser via WebGPU (WebLLM). Zero backend. Zero API keys. Model downloads once , cached in IndexedDB.
+Client-side only AI chat. Runs Qwen3.5 0.8B locally in-browser via WebGPU (WebLLM). Zero backend. Zero API keys. Model downloads once, cached in IndexedDB.
 
 ### Quick Start
 
 ```
-yarn dev   → Vite dev (headers auto-set)
-yarn build → production build
-yarn preview → preview production
-yarn lint  → ESLint
+yarn dev      → Vite dev (headers auto-set)
+yarn build    → production build
+yarn preview  → preview production
+yarn lint     → ESLint
+yarn deploy   → deploy to GitHub Pages (requires yarn build first)
 ```
+
+### Deploy
+
+```
+yarn predeploy   → builds production bundle
+yarn deploy      → pushes dist/ to gh-pages branch
+```
+
+GitHub Actions triggers automatically on `main` push. Alternatively run `yarn deploy` locally.
 
 ### Architecture (Tiny)
 
 ```
 main.tsx → App.tsx (EngineProvider global state + useState nav)
-  ├── LandingPage → capability detection (WebGPU, RAM, browser)
-  └── QwenPage → Sidebar (static) + ChatArea (streaming + Sender)
-                   └── useWebLLM hook (~250 LOC, core logic)
+   ├── LandingPage → capability detection (WebGPU, RAM, browser)
+   └── QwenPage → Sidebar (static) + ChatArea (streaming + Sender)
+                    └── useWebLLM hook (~250 LOC, core logic)
 ```
 
 **No Redux, no Zustand, no react-router.** Just React context + custom hook + useState.
+
+### Dependencies
+
+| Package                  | Purpose                                             |
+| ------------------------ | --------------------------------------------------- |
+| `@mlc-ai/web-llm`        | In-browser ML inference engine (WebGPU)             |
+| `antd` + `@ant-design/x` | UI components and markdown rendering                |
+| `recharts`               | Charts (used in LandingPage diagnostics)            |
+| `coi-serviceworker`      | Inject COOP/COEP headers client-side                |
+| `axios`                  | HTTP requests (capability detection, external APIs) |
 
 ### Files That Matter (Read in Order)
 
@@ -52,8 +72,8 @@ main.tsx → App.tsx (EngineProvider global state + useState nav)
 
 ```
 1. App loads → EngineProvider.preWarmModelCache() checks IndexedDB
-   ├─ cached → status: complete (100%)
-   └─ not cached → CreateMLCEngine() downloads model, on complete → engine.unload() (free GPU VRAM)
+    ├─ cached → status: complete (100%)
+    └─ not cached → CreateMLCEngine() downloads model, on complete → engine.unload() (free GPU VRAM)
 2. Chat starts → useWebLLM.initWebLLM() loads from disk to GPU (instant)
 3. Message → handleRequest → chatWebLLM(stream: true) → token streaming (~16ms batches)
 4. Stop → engine.interruptGenerate() | New chat → engine.resetChat() + clearMessages()
@@ -63,17 +83,17 @@ Pre-warm → unload GPU → lazy-load strategy: Downloads at boot, frees GPU, lo
 
 ### Inference Params (`LAI_SETTINGS` in constants.ts)
 
-| Param             | Non-Thinking             | Thinking |
-| ----------------- | ------------------------ | -------- |
-| temperature       | 0.7                      | 1.0      |
-| top_p             | 1.0                      | 0.95     |
-| presence_penalty  | 2.0                      | 1.5      |
-| frequency_penalty | 1.5                      | 0.5      |
-| min_p             | 0.1                      | 0.2      |
-| context_window    | device auto- (RAM-aware) | same     |
-| max_tokens        | 1024                     | 1024     |
+| Param             | Non-Thinking       | Thinking |
+| ----------------- | ------------------ | -------- |
+| temperature       | 0.7                | 1.0      |
+| top_p             | 1.0                | 0.95     |
+| presence_penalty  | 2.0                | 1.5      |
+| frequency_penalty | 1.5                | 0.5      |
+| min_p             | 0.1                | 0.2      |
+| context_window    | device auto- (RAM) | device   |
+| max_tokens        | 1024               | 1024     |
 
-"Thinking mode" toggle in Sender → sends `enable_thinking: true` in `extra_body`. Model wraps reasoning in `</think>`. ChatArea parses to render `<Think>` panel before response.
+"Thinking mode" is enabled by default. Sender toggle turns it off. Sends `enable_thinking: true` in `extra_body` when on. Model wraps reasoning in `</think>`. ChatArea parses to render `<Think>` panel before response.
 
 ### Troubleshooting
 
@@ -88,7 +108,8 @@ Pre-warm → unload GPU → lazy-load strategy: Downloads at boot, frees GPU, lo
 ### Environment
 
 - React 18 + TypeScript 5.6 (strict)
-- Vite 6 (base: `/react-ai-chat-full-client-side/`)
+- Vite 6 (`base: /react-ai-chat-full-client-side/`)
 - Ant Design 6 + `@ant-design/x` UI components
 - SCSS global prefix: `$prefix-cls: whub-ant;`
-- Deployment: `gh-pages` (subdirectory)
+- Deployment: `gh-pages` (subdirectory) via `gh-pages` package
+- Build: `tsc -b && vite build` (combined ts + vite)

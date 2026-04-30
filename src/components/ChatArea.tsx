@@ -40,7 +40,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
   welcomeDescription = "I'm ready to help you!",
 }) => {
   const [value, setValue] = useState("");
-  const [thinkingEnabled, setThinkingEnabled] = useState(false);
+  const [thinkingEnabled, setThinkingEnabled] = useState(true);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
