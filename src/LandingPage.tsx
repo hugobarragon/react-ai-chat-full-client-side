@@ -1,5 +1,16 @@
 import React, { useState, useEffect } from "react";
-import { Typography, Button, Space, Card, Tag, Spin, Descriptions, Collapse, Row, Col } from "antd";
+import {
+  Typography,
+  Button,
+  Space,
+  Card,
+  Tag,
+  Spin,
+  Descriptions,
+  Collapse,
+  Row,
+  Col,
+} from "antd";
 import {
   RobotOutlined,
   RocketOutlined,
@@ -22,10 +33,10 @@ interface LandingPageProps {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  supported: '#52c41a',
-  unsupported: '#ff4d4f',
-  partial: '#faad14',
-  info: '#1890ff',
+  supported: "#52c41a",
+  unsupported: "#ff4d4f",
+  partial: "#faad14",
+  info: "#1890ff",
 };
 
 const STATUS_ICONS: Record<string, React.ReactNode> = {
@@ -45,7 +56,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
         const result = await detectAllFeatures();
         setChecks(result);
       } catch (err) {
-        console.error('Feature detection failed:', err);
+        console.error("Feature detection failed:", err);
       } finally {
         setLoading(false);
       }
@@ -68,7 +79,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
         }}
       >
         <Spin size="large" />
-        <Text style={{ color: "rgba(255,255,255,0.8)", marginTop: "16px", fontSize: "16px" }}>
+        <Text
+          style={{
+            color: "rgba(255,255,255,0.8)",
+            marginTop: "16px",
+            fontSize: "16px",
+          }}
+        >
           Detecting browser capabilities...
         </Text>
       </div>
@@ -94,7 +111,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
       }}
     >
       {/* Hero Section */}
-      <div style={{ maxWidth: "800px", textAlign: "center", marginBottom: "40px" }}>
+      <div
+        style={{ maxWidth: "800px", textAlign: "center", marginBottom: "40px" }}
+      >
         <RocketOutlined style={{ fontSize: "80px", marginBottom: "30px" }} />
         <Title level={1} style={{ color: "white", marginBottom: "10px" }}>
           Browser AI Chat
@@ -108,8 +127,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
             marginBottom: "40px",
           }}
         >
-          Experience the power of local AI with <strong>Qwen 3.5 0.8B</strong> -
-          a cutting-edge model running in your browser using WebGPU.
+          Experience the power of local AI with <strong>LAI (Local AI)</strong>{" "}
+          - a cutting-edge model running in your browser using WebGPU.
         </Paragraph>
         <Space size="large">
           <Button
@@ -146,17 +165,41 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
         >
           <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
             {readiness.ready ? (
-              <CheckCircleOutlined style={{ fontSize: "32px", color: "#52c41a" }} />
+              <CheckCircleOutlined
+                style={{ fontSize: "32px", color: "#52c41a" }}
+              />
             ) : (
-              <CloseCircleOutlined style={{ fontSize: "32px", color: "#ff4d4f" }} />
+              <CloseCircleOutlined
+                style={{ fontSize: "32px", color: "#ff4d4f" }}
+              />
             )}
             <div style={{ flex: 1 }}>
-              <Title level={4} style={{ color: readiness.ready ? "#52c41a" : "#ff4d4f", marginBottom: "8px" }}>
+              <Title
+                level={4}
+                style={{
+                  color: readiness.ready ? "#52c41a" : "#ff4d4f",
+                  marginBottom: "8px",
+                }}
+              >
                 WebLLM Readiness: {readiness.ready ? "Ready" : "Not Ready"}
               </Title>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  marginBottom: "8px",
+                }}
+              >
                 <Text style={{ color: "rgba(255,255,255,0.7)" }}>Score:</Text>
-                <div style={{ flex: 1, background: "rgba(255,255,255,0.1)", borderRadius: "4px", height: "8px" }}>
+                <div
+                  style={{
+                    flex: 1,
+                    background: "rgba(255,255,255,0.1)",
+                    borderRadius: "4px",
+                    height: "8px",
+                  }}
+                >
                   <div
                     style={{
                       width: `${readiness.score}%`,
@@ -167,7 +210,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
                     }}
                   />
                 </div>
-                <Text style={{ color: "rgba(255,255,255,0.7)" }}>{readiness.score}/100</Text>
+                <Text style={{ color: "rgba(255,255,255,0.7)" }}>
+                  {readiness.score}/100
+                </Text>
               </div>
               {readiness.issues.length > 0 && (
                 <div style={{ marginBottom: "8px" }}>
@@ -194,7 +239,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
 
       {/* Feature Checklist Grid */}
       <div style={{ maxWidth: "800px", width: "100%" }}>
-        <Title level={3} style={{ color: "white", textAlign: "center", marginBottom: "24px" }}>
+        <Title
+          level={3}
+          style={{ color: "white", textAlign: "center", marginBottom: "24px" }}
+        >
           <GlobalOutlined /> Browser & GPU Compatibility Check
         </Title>
 
@@ -204,28 +252,77 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
             <Card
               style={{
                 background: "rgba(255,255,255,0.1)",
-                border: `1px solid ${STATUS_COLORS[webgpu?.available && webgpu?.enabled ? 'supported' : 'unsupported']}`,
+                border: `1px solid ${STATUS_COLORS[webgpu?.available && webgpu?.enabled ? "supported" : "unsupported"]}`,
               }}
               styles={{ body: { padding: "16px" } }}
             >
-              <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "12px" }}>
-                <ThunderboltOutlined style={{ fontSize: "24px", color: STATUS_COLORS[webgpu?.available && webgpu?.enabled ? 'supported' : 'unsupported'] }} />
-                <Title level={5} style={{ color: "white", marginBottom: 0 }}>WebGPU</Title>
-                <Tag color={STATUS_COLORS[webgpu?.available && webgpu?.enabled ? 'supported' : 'unsupported']}>
-                  {STATUS_ICONS[webgpu?.available && webgpu?.enabled ? 'supported' : 'unsupported']}
-                  {webgpu?.available && webgpu?.enabled ? "Supported" : "Unsupported"}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "12px",
+                  marginBottom: "12px",
+                }}
+              >
+                <ThunderboltOutlined
+                  style={{
+                    fontSize: "24px",
+                    color:
+                      STATUS_COLORS[
+                        webgpu?.available && webgpu?.enabled
+                          ? "supported"
+                          : "unsupported"
+                      ],
+                  }}
+                />
+                <Title level={5} style={{ color: "white", marginBottom: 0 }}>
+                  WebGPU
+                </Title>
+                <Tag
+                  color={
+                    STATUS_COLORS[
+                      webgpu?.available && webgpu?.enabled
+                        ? "supported"
+                        : "unsupported"
+                    ]
+                  }
+                >
+                  {
+                    STATUS_ICONS[
+                      webgpu?.available && webgpu?.enabled
+                        ? "supported"
+                        : "unsupported"
+                    ]
+                  }
+                  {webgpu?.available && webgpu?.enabled
+                    ? "Supported"
+                    : "Unsupported"}
                 </Tag>
               </div>
-              {webgpu?.available && webgpu?.enabled && webgpu?.computeTier !== null && (
-                <Descriptions size="small" column={1} styles={{ label: { color: "rgba(255,255,255,0.6)" } }} style={{ marginBottom: "8px" }}>
-                  <Descriptions.Item label="Compute Tier">Tier {webgpu.computeTier}</Descriptions.Item>
-                  <Descriptions.Item label="GPU">{webgpu.info?.renderer || "Unknown"}</Descriptions.Item>
-                  <Descriptions.Item label="Vendor">{webgpu.info?.vendor || "Unknown"}</Descriptions.Item>
-                </Descriptions>
-              )}
+              {webgpu?.available &&
+                webgpu?.enabled &&
+                webgpu?.computeTier !== null && (
+                  <Descriptions
+                    size="small"
+                    column={1}
+                    styles={{ label: { color: "rgba(255,255,255,0.6)" } }}
+                    style={{ marginBottom: "8px" }}
+                  >
+                    <Descriptions.Item label="Compute Tier">
+                      Tier {webgpu.computeTier}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="GPU">
+                      {webgpu.info?.renderer || "Unknown"}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Vendor">
+                      {webgpu.info?.vendor || "Unknown"}
+                    </Descriptions.Item>
+                  </Descriptions>
+                )}
               {!webgpu?.available && (
                 <Text style={{ color: "rgba(255,255,255,0.6)" }}>
-                  WebGPU is not available in your browser. Use Chrome 113+, Edge 113+, or Safari 17+.
+                  WebGPU is not available in your browser. Use Chrome 113+, Edge
+                  113+, or Safari 17+.
                 </Text>
               )}
             </Card>
@@ -234,17 +331,42 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
           {/* Browser Card */}
           <Col xs={24} md={12}>
             <Card
-              style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)" }}
+              style={{
+                background: "rgba(255,255,255,0.1)",
+                border: "1px solid rgba(255,255,255,0.2)",
+              }}
               styles={{ body: { padding: "16px" } }}
             >
-              <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "12px" }}>
-                <GlobalOutlined style={{ fontSize: "24px", color: "#1890ff" }} />
-                <Title level={5} style={{ color: "white", marginBottom: 0 }}>Browser</Title>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "12px",
+                  marginBottom: "12px",
+                }}
+              >
+                <GlobalOutlined
+                  style={{ fontSize: "24px", color: "#1890ff" }}
+                />
+                <Title level={5} style={{ color: "white", marginBottom: 0 }}>
+                  Browser
+                </Title>
               </div>
-              <Descriptions size="small" column={1} styles={{ label: { color: "rgba(255,255,255,0.6)" } }} style={{ marginBottom: "8px" }}>
-                <Descriptions.Item label="Name">{browser?.name}</Descriptions.Item>
-                <Descriptions.Item label="Version">{browser?.version}</Descriptions.Item>
-                <Descriptions.Item label="Platform">{browser?.platform}</Descriptions.Item>
+              <Descriptions
+                size="small"
+                column={1}
+                styles={{ label: { color: "rgba(255,255,255,0.6)" } }}
+                style={{ marginBottom: "8px" }}
+              >
+                <Descriptions.Item label="Name">
+                  {browser?.name}
+                </Descriptions.Item>
+                <Descriptions.Item label="Version">
+                  {browser?.version}
+                </Descriptions.Item>
+                <Descriptions.Item label="Platform">
+                  {browser?.platform}
+                </Descriptions.Item>
               </Descriptions>
             </Card>
           </Col>
@@ -252,17 +374,44 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
           {/* Device Memory Card */}
           <Col xs={24} md={12}>
             <Card
-              style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)" }}
+              style={{
+                background: "rgba(255,255,255,0.1)",
+                border: "1px solid rgba(255,255,255,0.2)",
+              }}
               styles={{ body: { padding: "16px" } }}
             >
-              <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "12px" }}>
-                <DatabaseOutlined style={{ fontSize: "24px", color: "#722ed1" }} />
-                <Title level={5} style={{ color: "white", marginBottom: 0 }}>Device Memory</Title>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "12px",
+                  marginBottom: "12px",
+                }}
+              >
+                <DatabaseOutlined
+                  style={{ fontSize: "24px", color: "#722ed1" }}
+                />
+                <Title level={5} style={{ color: "white", marginBottom: 0 }}>
+                  Device Memory
+                </Title>
               </div>
-              <Descriptions size="small" column={1} styles={{ label: { color: "rgba(255,255,255,0.6)" } }} style={{ marginBottom: "8px" }}>
-                <Descriptions.Item label="RAM">{device?.deviceMemory ? `${device.deviceMemory} GB` : "Unknown"}</Descriptions.Item>
-                <Descriptions.Item label="CPU Cores">{device?.hardwareConcurrency} cores</Descriptions.Item>
-                <Descriptions.Item label="Screen">{device?.screenResolution} @ {device?.pixelRatio}x</Descriptions.Item>
+              <Descriptions
+                size="small"
+                column={1}
+                styles={{ label: { color: "rgba(255,255,255,0.6)" } }}
+                style={{ marginBottom: "8px" }}
+              >
+                <Descriptions.Item label="RAM">
+                  {device?.deviceMemory
+                    ? `${device.deviceMemory} GB`
+                    : "Unknown"}
+                </Descriptions.Item>
+                <Descriptions.Item label="CPU Cores">
+                  {device?.hardwareConcurrency} cores
+                </Descriptions.Item>
+                <Descriptions.Item label="Screen">
+                  {device?.screenResolution} @ {device?.pixelRatio}x
+                </Descriptions.Item>
               </Descriptions>
             </Card>
           </Col>
@@ -270,23 +419,40 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
           {/* Texture Compression Card */}
           <Col xs={24} md={12}>
             <Card
-              style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)" }}
+              style={{
+                background: "rgba(255,255,255,0.1)",
+                border: "1px solid rgba(255,255,255,0.2)",
+              }}
               styles={{ body: { padding: "16px" } }}
             >
-              <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "12px" }}>
-                <DesktopOutlined style={{ fontSize: "24px", color: "#13c2c2" }} />
-                <Title level={5} style={{ color: "white", marginBottom: 0 }}>Texture Compression</Title>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "12px",
+                  marginBottom: "12px",
+                }}
+              >
+                <DesktopOutlined
+                  style={{ fontSize: "24px", color: "#13c2c2" }}
+                />
+                <Title level={5} style={{ color: "white", marginBottom: 0 }}>
+                  Texture Compression
+                </Title>
               </div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
-                {checks?.textureCompression && Object.entries(checks.textureCompression).map(([format, supported]) => (
-                  <Tag
-                    key={format}
-                    color={supported ? "green" : "default"}
-                    style={{ margin: 0, fontSize: "11px" }}
-                  >
-                    {format.toUpperCase()}
-                  </Tag>
-                ))}
+                {checks?.textureCompression &&
+                  Object.entries(checks.textureCompression).map(
+                    ([format, supported]) => (
+                      <Tag
+                        key={format}
+                        color={supported ? "green" : "default"}
+                        style={{ margin: 0, fontSize: "11px" }}
+                      >
+                        {format.toUpperCase()}
+                      </Tag>
+                    ),
+                  )}
               </div>
             </Card>
           </Col>
@@ -309,25 +475,43 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
           <Collapse
             ghost
             style={{ background: "transparent" }}
-            items={checks?.checks.map((check) => ({
-              key: check.label,
-              label: (
-                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                  <Text style={{ color: STATUS_COLORS[check.status], fontSize: "16px" }}>
-                    {STATUS_ICONS[check.status]}
+            items={
+              checks?.checks.map((check) => ({
+                key: check.label,
+                label: (
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                    }}
+                  >
+                    <Text
+                      style={{
+                        color: STATUS_COLORS[check.status],
+                        fontSize: "16px",
+                      }}
+                    >
+                      {STATUS_ICONS[check.status]}
+                    </Text>
+                    <Text style={{ color: "white", fontWeight: 500 }}>
+                      {check.label}
+                    </Text>
+                    <Tag
+                      color={STATUS_COLORS[check.status]}
+                      style={{ marginLeft: "auto" }}
+                    >
+                      {check.value}
+                    </Tag>
+                  </div>
+                ),
+                children: (
+                  <Text style={{ color: "rgba(255,255,255,0.7)" }}>
+                    {check.description}
                   </Text>
-                  <Text style={{ color: "white", fontWeight: 500 }}>{check.label}</Text>
-                  <Tag color={STATUS_COLORS[check.status]} style={{ marginLeft: "auto" }}>
-                    {check.value}
-                  </Tag>
-                </div>
-              ),
-              children: (
-                <Text style={{ color: "rgba(255,255,255,0.7)" }}>
-                  {check.description}
-                </Text>
-              ),
-            })) || []}
+                ),
+              })) || []
+            }
           />
         </Card>
 
@@ -345,18 +529,32 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
           <Title level={5} style={{ color: "white", marginBottom: "16px" }}>
             <SafetyOutlined /> Requirements for Running LLMs in Browser
           </Title>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "12px" }}>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+              gap: "12px",
+            }}
+          >
             {[
               { icon: "🌐", text: "Chrome 113+, Edge 113+, or Safari 17+" },
               { icon: "⚡", text: "WebGPU enabled in browser" },
               { icon: "💾", text: "At least 4GB RAM (8GB recommended)" },
-              { icon: "🖥️", text: "Dedicated GPU (integrated works for small models)" },
+              {
+                icon: "🖥️",
+                text: "Dedicated GPU (integrated works for small models)",
+              },
               { icon: "🔒", text: "HTTPS or localhost (for COOP/COEP)" },
               { icon: "📡", text: "Internet connection (for model download)" },
             ].map((req, i) => (
-              <div key={i} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <div
+                key={i}
+                style={{ display: "flex", alignItems: "center", gap: "8px" }}
+              >
                 <span style={{ fontSize: "20px" }}>{req.icon}</span>
-                <Text style={{ color: "rgba(255,255,255,0.8)" }}>{req.text}</Text>
+                <Text style={{ color: "rgba(255,255,255,0.8)" }}>
+                  {req.text}
+                </Text>
               </div>
             ))}
           </div>

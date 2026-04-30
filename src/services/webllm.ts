@@ -1,7 +1,7 @@
 import { CreateMLCEngine, MLCEngine } from "@mlc-ai/web-llm";
 import systemPromptData from "../systemPrompt";
 import { notification } from "antd";
-import { QWEN_SETTINGS, MODEL_ID, MODEL_CONFIG } from "../constants";
+import { LAI_SETTINGS, MODEL_ID, MODEL_CONFIG } from "../constants";
 
 let engine: MLCEngine | null = null;
 
@@ -31,10 +31,10 @@ export const initWebLLM = async (
     return engine;
   } catch (e) {
     console.error("WebLLM Initialization Error:", e);
-    
+
     if (e instanceof Error) {
       const errorMessage = e.message;
-      
+
       if (errorMessage.includes("WebGPU") || errorMessage.includes("gpu")) {
         notification.error({
           title: "WebGPU Not Supported",
@@ -61,7 +61,7 @@ export const initWebLLM = async (
         });
       }
     }
-    
+
     throw e;
   }
 };
@@ -92,8 +92,8 @@ export const chatWebLLM = async (
       : [{ role: "system", content: systemPrompt }, ...messages];
 
   try {
-    const settings = enableThinking ? QWEN_SETTINGS.thinking : QWEN_SETTINGS.nonThinking;
-    const qwen35ChatOptions = {
+    const settings = enableThinking ? LAI_SETTINGS.thinking : LAI_SETTINGS.nonThinking;
+    const laiChatOptions = {
       messages: normalizedMessages as any,
       stream: true,
       ...settings,
@@ -102,7 +102,7 @@ export const chatWebLLM = async (
       },
     };
 
-    const chunks = await activeEngine.chat.completions.create(qwen35ChatOptions);
+    const chunks = await activeEngine.chat.completions.create(laiChatOptions);
 
     let fullResponse = "";
     for await (const chunk of chunks as AsyncIterable<any>) {
@@ -115,26 +115,25 @@ export const chatWebLLM = async (
 
     const statsText = await activeEngine.runtimeStatsText();
     console.log("Runtime stats:", statsText);
-    
+
     const prefillMatch = statsText.match(/prefill:\s*([\d.]+)\s*tokens?\/sec/i);
     const decodeMatch = statsText.match(/decod(?:ing|e):\s*([\d.]+)\s*tokens?\/sec/i);
-    
+
     // Extract total tokens generated from fullResponse length (approximately 4 chars per token)
     // or try to extract from stats text
     let tokensUsed = Math.ceil(fullResponse.length / 4);
-    
-    // Try to match token count from stats text (handles various formats)
-    const tokenMatches = statsText.match(/(\d+)\s*(?:tok|tokens)/gi);
-    if (tokenMatches && tokenMatches.length > 0) {
-      const lastMatch = tokenMatches[tokenMatches.length - 1];
-      const extracted = parseInt(lastMatch, 10);
+
+    // Extract generated token count from stats text
+    const generatedMatch = statsText.match(/(\d+)\s*tokens\s*generated/i);
+    if (generatedMatch && generatedMatch[1]) {
+      const extracted = parseInt(generatedMatch[1], 10);
       if (!isNaN(extracted) && extracted > 0) {
         tokensUsed = extracted;
       }
     }
-    
-    const contextWindow = QWEN_SETTINGS.context_window;
-    
+
+    const contextWindow = MODEL_CONFIG.overrides?.context_window_size || LAI_SETTINGS.context_window;
+
     // Round speeds to 1 decimal place
     const prefillSpeed = prefillMatch ? parseFloat(prefillMatch[1]).toFixed(1) : "N/A";
     const decodeSpeed = decodeMatch ? parseFloat(decodeMatch[1]).toFixed(1) : "N/A";
@@ -151,11 +150,11 @@ export const chatWebLLM = async (
     };
   } catch (e) {
     console.error("WebLLM Chat Error:", e);
-    
+
     // Show notification for different error types
     if (e instanceof Error) {
       const errorMessage = e.message;
-      
+
       if (errorMessage.includes("max_tokens")) {
         notification.warning({
           title: "Response Truncated",
@@ -188,7 +187,7 @@ export const chatWebLLM = async (
         });
       }
     }
-    
+
     throw e;
   }
 };

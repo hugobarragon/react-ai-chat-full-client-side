@@ -23,7 +23,7 @@ const AppContent = () => {
     {
       key: "qwen",
       icon: <BulbOutlined style={{ color: "orange" }} />,
-      label: "Qwen 3.5 0.8B (WebLLM - GPU)",
+      label: "LAI (WebLLM - GPU)",
     },
   ];
 

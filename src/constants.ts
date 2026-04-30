@@ -1,16 +1,16 @@
+import { getModelConfigWithContext } from "./utils/deviceMemory";
+
 // Shared model configuration for WebLLM
 // Used by both src/context/EngineContext.tsx and src/services/webllm.ts
 
 export const MODEL_ID = "Qwen3.5-0.8B-q4f16_1-MLC";
 
-export const MODEL_CONFIG = {
+export const MODEL_CONFIG = getModelConfigWithContext({
   model: "https://huggingface.co/mlc-ai/Qwen3.5-0.8B-q4f16_1-MLC",
   model_id: "Qwen3.5-0.8B-q4f16_1-MLC",
   model_lib: "https://raw.githubusercontent.com/akaashrp/mlc-binaries/main/Qwen3.5-0.8B-q4f16_1-webgpu-mlc.wasm",
-  overrides: {
-    context_window_size: 2048,
-  },
-};
+  overrides: {},
+});
 
 export const MODEL_CONFIG_LIST = [MODEL_CONFIG] as const;
 
@@ -31,10 +31,8 @@ export const ERROR_MEMORY_NOTIF_MESSAGE = "Your device doesn't have enough memor
 
 export const CHAT_ERROR_NOTIF_TITLE = "Chat Error";
 
-export const SYSTEM_PROMPT = "You are a helpful AI assistant running entirely in the user's browser using WebGPU. Be concise, helpful, and friendly.";
-
-// Qwen 3.5 0.8B generation settings
-export const QWEN_SETTINGS = {
+// LAI (Local AI) generation settings
+export const LAI_SETTINGS = {
   nonThinking: {
     temperature: 1.0,
     top_p: 1.0,

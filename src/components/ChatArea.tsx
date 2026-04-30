@@ -18,7 +18,7 @@ import {
   BulbOutlined,
   ToolOutlined,
 } from "@ant-design/icons";
-import { QWEN_SETTINGS } from "../constants";
+import { LAI_SETTINGS } from "../constants";
 
 interface ChatAreaProps {
   messages: any[];
@@ -222,7 +222,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
           const lastMessage = messages[messages.length - 1];
           const tokensUsed = lastMessage?.metrics?.tokensUsed || 0;
           const contextWindow =
-            lastMessage?.metrics?.contextWindow || QWEN_SETTINGS.context_window;
+            lastMessage?.metrics?.contextWindow || LAI_SETTINGS.context_window;
           const percent =
             contextWindow > 0
               ? Math.round((tokensUsed / contextWindow) * 100)
@@ -233,22 +233,24 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
             <Sender
               value={value}
               onChange={setValue}
-              footer={[
-                <Button
-                  variant="outlined"
-                  color={thinkingEnabled ? "primary" : "default"}
-                  onClick={() => setThinkingEnabled((checked) => !checked)}
-                >
-                  <span style={{ color: "#555" }}>Thinking mode</span>
-                </Button>,
-                <Progress
-                  type="circle"
-                  size={14}
-                  percent={percent}
-                  strokeColor={strokeColor}
-                  format={() => `${tokensUsed}/${contextWindow}`}
-                />,
-              ]}
+              footer={
+                <Flex gap="small" align="center">
+                  <Button
+                    variant="outlined"
+                    color={thinkingEnabled ? "primary" : "default"}
+                    onClick={() => setThinkingEnabled((checked) => !checked)}
+                  >
+                    <span style={{ color: "#555" }}>Thinking mode</span>
+                  </Button>
+                  <Progress
+                    type="circle"
+                    size={14}
+                    percent={percent}
+                    strokeColor={strokeColor}
+                    format={() => `${tokensUsed}/${contextWindow}`}
+                  />
+                </Flex>
+              }
               onSubmit={(v) => {
                 if (isGenerating) return;
                 setValue("");

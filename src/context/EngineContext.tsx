@@ -1,8 +1,20 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+} from "react";
 import { CreateMLCEngine, hasModelInCache } from "@mlc-ai/web-llm";
 import { MODEL_CONFIG } from "../constants";
 
-export type DownloadStatus = "idle" | "loading" | "downloading" | "complete" | "error";
+export type DownloadStatus =
+  | "idle"
+  | "loading"
+  | "downloading"
+  | "complete"
+  | "error";
 
 interface EngineContextType {
   status: DownloadStatus;
@@ -13,15 +25,29 @@ interface EngineContextType {
 
 const EngineContext = createContext<EngineContextType | null>(null);
 
+const defaultEngineContext: EngineContextType = {
+  status: "idle",
+  progress: "",
+  progressPercent: 0,
+  modelDownloaded: false,
+};
+
 export const useEngine = (): EngineContextType => {
   const context = useContext(EngineContext);
   if (!context) {
-    throw new Error("useEngine must be used within an EngineProvider");
+    if (import.meta.env.DEV) {
+      console.warn(
+        "useEngine: EngineContext is null — the component may be rendered outside EngineProvider or during Vite HMR. Returning default values.",
+      );
+    }
+    return defaultEngineContext;
   }
   return context;
 };
 
-export const EngineProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const EngineProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [status, setStatus] = useState<DownloadStatus>("idle");
   const [progress, setProgress] = useState("");
   const [progressPercent, setProgressPercent] = useState(0);
@@ -32,7 +58,9 @@ export const EngineProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const modelId = MODEL_CONFIG.model_id;
 
     // Check if already fully cached
-    const isCached = await hasModelInCache(modelId, { model_list: [MODEL_CONFIG] });
+    const isCached = await hasModelInCache(modelId, {
+      model_list: [MODEL_CONFIG],
+    });
     if (isCached) {
       setStatus("complete");
       setProgressPercent(100);

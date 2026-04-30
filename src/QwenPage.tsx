@@ -7,11 +7,17 @@ import { resetWebLLM } from "./services/webllm";
 const QwenPage: React.FC = () => {
   const [activeKey, setActiveKey] = useState("0");
   const [conversationItems] = useState([
-    { key: "0", label: "Qwen 3.5 0.8B (WebLLM)", group: "Today" },
+    { key: "0", label: "LAI (WebLLM)", group: "Today" },
   ]);
 
-  const { messages, handleRequest, handleStop, loadingModel, loadingProgress, clearMessages } =
-    useWebLLM([]);
+  const {
+    messages,
+    handleRequest,
+    handleStop,
+    loadingModel,
+    loadingProgress,
+    clearMessages,
+  } = useWebLLM([]);
 
   const handleNewChat = async () => {
     // Clear the current messages
@@ -35,8 +41,8 @@ const QwenPage: React.FC = () => {
         onCancel={handleStop}
         loadingModel={loadingModel}
         loadingProgress={loadingProgress}
-        welcomeTitle="Hello, I'm Qwen 3.5"
-        welcomeDescription="I run on your GPU via WebLLM with the 0.8B model."
+        welcomeTitle="Hello, I'm LAI"
+        welcomeDescription=""
       />
     </div>
   );
